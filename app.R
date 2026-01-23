@@ -15,7 +15,6 @@ ui <- fluidPage(
     tags$style(HTML(glue::glue("
       .top-tabs > .tabbable > .nav-tabs {{
         background-color: {blue_light} !important;
-        color:{blue_medium};
         padding: 6px 6px 0 6px;
         border-radius: 6px;
       }}
@@ -24,8 +23,8 @@ ui <- fluidPage(
   
   titlePanel("DUC2: Impact from offshore infrastructures on marine life"),
   mainPanel(
-    tags$div(                     # <-- wrap tabsetPanel in a div
-      class = "top-tabs",
+    tags$div(                 
+      class = "top-tabs container-fluid",
       tabsetPanel(
         id = "tabsetPanelID",
         type = "tabs",
@@ -108,9 +107,9 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  output$seabass_migration <- renderDT(iris)
-  output$acoustic_telemetry <- renderDT(cars)
-  output$env_layers <- renderDT(head(iris, 3))
+  output$PAM_dashboard <- renderDT(iris)
+  output$PAM_data <- renderDT(cars)
+  output$HSM_porpoise <- renderDT(head(iris, 3))
 }
 
 shinyApp(ui, server)
