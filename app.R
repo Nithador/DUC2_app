@@ -1,115 +1,125 @@
+
+# Load libraries ----------------------------------------------------------
+
 library(shiny)
 library(DT)
-library(sass)
-library(yaml)
-library(memoise)
+library(leaflet)
 library(glue)
+library(rstac)
+library(httr)
+library(terra)
+library(htmltools)
+library(leaflet.minicharts)
+library(leaflet.extras)
+library(leafem)
+library(tidyr)
+library(RColorBrewer)
+library(rstac)
+library(purrr)
+library(arrow)
+library(dplyr)
+library(lubridate)
 
-blue_light <- "#bfd7f0"
-blue_medium <- "#3b5d82"
 
+# Load data ---------------------------------------------------------------
+deployments <- readRDS("data/deployments.rds")
+
+# Load STAC metadata ------------------------------------------------------
+wms_layers <- load_STAC_metadata(metadata_csv = "data/EDITO_STAC_layers_metadata.csv")
+telemetry_gam_s3 <- load_acoustic_telemetry_GAM_s3(s3_bucket_url = s3_bucket_seabass_url)
+
+
+# load ETN data sum -------------------------------------------------------
+
+etn_sum_monthyear_path <- "etn_sum_seabass_monthyear_individual.rds"
+etn_monthyear_individual_sum <- build_monthyear_rds(output_path = etn_sum_monthyear_path,
+                                                    wms_layer_metadata = wms_layers,
+                                                    dataset_key = "seabass acoustic detections")
+
+# ui ----------------------------------------------------------------------
 ui <- fluidPage(
-  
-  # shade the top tabs
   tags$head(
     tags$style(HTML(glue::glue("
-      .top-tabs > .tabbable > .nav-tabs {{
-        background-color: {blue_light} !important;
-        padding: 6px 6px 0 6px;
-        border-radius: 6px;
+      :root {{
+        --blue-light: {dto_colors$blue_light};
+        --blue-medium: {dto_colors$blue_medium};
+        --blue-dark: {dto_colors$blue_dark};
       }}
-  ")))
+    "))),
+    tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
   ),
   
   titlePanel("DUC2: Impact from offshore infrastructures on marine life"),
+  
   mainPanel(
-    tags$div(                 
+    width = 12,
+    tags$div(
       class = "top-tabs container-fluid",
+      
+      tags$a(
+        href = bioflow_url,
+        target = "_blank",
+        rel = "noopener",
+        class = "top-tabs-logo",
+        tags$img(
+          src = "Logo_BIO-Flow2023_Final_Positive.png",
+          height = "42px",
+          alt = "DTO-Bioflow"
+        )
+      ),
+      
       tabsetPanel(
         id = "tabsetPanelID",
         type = "tabs",
         
+        tabPanel("Home", style = "font-size: 16px;", 
+                 mod_home_ui("home", 
+                             bioflow_url = bioflow_url, 
+                             bioflow_duc2_url = bioflow_duc2_url,
+                             colors = dto_colors)),
+        
         tabPanel(
-          "Home",
-          fluidRow(
-            column(
-              width = 12,
-              h3("Welcome! 👋"),
-              p("Do you want to learn more about marine life and how it is influenced by offshore infrastructures? You're in the right place!"),
-              h4("How to use this app"),
-              p("<explanations>", style = "margin-bottom: 200px;"),
-              h4("Want to learn more?"),
-              p("Click the buttons below!"),
-              
-              tags$div(
-                tags$a(
-                  "More info on DUC2",
-                  href = "https://dto-bioflow.eu/use-cases/duc-2-impact-offshore-infrastructures",
-                  target = "_blank",
-                  rel = "noopener",
-                  class = "btn btn-primary d-flex align-items-center justify-content-center",
-                  style = glue::glue("margin-bottom:25px;background-color:{blue_medium}; color:white;")
-                ),
-                HTML("<br>"),
-                tags$a(
-                  tagList(
-                    tags$img(
-                      src = "Logo_BIO-Flow2023_Final_Negative.png",
-                      height = "50px",
-                      style = "vertical-align:middle"
-                    )
-                  ),
-                  href = "https://dto-bioflow.eu/",
-                  target = "_blank",
-                  rel = "noopener",
-                  class = "btn btn-primary",
-                  style = glue::glue("height:60px;background-color:{blue_medium}; color:white;")
-                )
-              )
-            )
-          )
+          title = tagList(
+            tags$img(src = "D_labrax_phylopic_CC0.png", height = "24px",
+                     style = "vertical-align:middle; margin-right:8px;"),
+            tags$span("European seabass", style = "font-size: 16px; vertical-align:middle;")
+          ),
+          class = "lower-level-tabs",
+          mod_seabass_ui("seabass")
         ),
         
         tabPanel(
           title = tagList(
-            tags$img(
-              src = "D_labrax_phylopic_CC0.png",
-              height = "24px",
-              style = "vertical-align:middle; margin-right:8px;"
-            ),
-            tags$span("European seabass", style = "font-size: 12px; vertical-align:middle;")
+            tags$img(src = "P_phocoena_phylopic_CC0.png", height = "24px",
+                     style = "vertical-align:middle; margin-right:8px;"),
+            tags$span("Harbour porpoise", style = "font-size: 16px; vertical-align:middle;")
           ),
-          tabsetPanel(
-            tabPanel("Migration predictions", DTOutput("seabass_migration")),
-            tabPanel("acoustic telemetry data", DTOutput("acoustic_telemetry")),
-            tabPanel("Environmental layers", DTOutput("env_layers"))
-          )
-        ),
-        
-        tabPanel(
-          title = tagList(
-            tags$img(
-              src = "P_phocoena_phylopic_CC0.png",
-              height = "24px",
-              style = "vertical-align:middle; margin-right:8px;"
-            ),
-            tags$span("Harbour porpoise", style = "font-size: 12px; vertical-align:middle;")
-          ),
-          tabsetPanel(
-            tabPanel("PAM dashboard", DTOutput("PAM_dashboard")),
-            tabPanel("PAM data", DTOutput("PAM_data")),
-            tabPanel("Habitat suitability (Marco-Bolo)", DTOutput("HSM_porpoise"))
-          )
+          class = "lower-level-tabs",
+          mod_porpoise_ui("porpoise")
         )
       )
     )
   )
 )
 
+
+# server ------------------------------------------------------------------
 server <- function(input, output, session) {
-  output$PAM_dashboard <- renderDT(iris)
-  output$PAM_data <- renderDT(cars)
-  output$HSM_porpoise <- renderDT(head(iris, 3))
+  mod_home_server("home")
+  
+  # In app.R server function
+  mod_seabass_server(
+    "seabass", 
+    deployments = deployments, 
+    etn_monthyear_individual_sum = etn_monthyear_individual_sum, 
+    base_map_fun = make_base_map,                    # Global function
+    prep_minicharts_inputs_fun = prep_minicharts_inputs,  # Global function
+    make_env_wms_map_fun = make_env_wms_map,        # Global function
+    telemetry_gam_s3 = telemetry_gam_s3,            # Data loaded in app.R
+    wms_layers = wms_layers                          # Data loaded in app.R
+  )
+
+  mod_porpoise_server("porpoise")
 }
 
 shinyApp(ui, server)

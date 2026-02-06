@@ -1,0 +1,382 @@
+##################################################################################
+##################################################################################
+
+# Author: Lotte Pohl
+# Email: lotte.pohl@vliz.be
+# Date: 2026-02-03
+# Script Name: ~/DUC2_viewer_acoustic_telemetry/R/map_environmental.R
+# Script Description: make a base leaflet map, and a map with several environmental layers as overlaygroups 
+
+##################################################################################
+##################################################################################
+
+
+# 1. base layer map -------------------------------------------------------
+
+make_base_map <- function(lng = 3, lat = 51.5, zoom = 8,
+                          arrow_src = "north_arrow.png") {
+  
+  
+  north_arrow <-
+    "<img src='https://www.clipartbest.com/cliparts/yTo/Lgr/yToLgryGc.png' style='width:35px;height:45px;'>"
+  
+  # ## TODO: change to file in .www/, not working for the moment
+  # north_arrow <- sprintf(
+  #   "<img src='%s' style='width:35px;height:45px;'>",
+  #   arrow_src
+  # )
+  
+  leaflet::leaflet() %>%
+    leaflet::setView(lng, lat, zoom = zoom) %>%
+    leaflet::addMapPane("basePane", zIndex = 100) %>%
+    leaflet::addTiles(group = "Open Street Map",
+                      options = leaflet::tileOptions(pane = "basePane")) %>%
+    leaflet::addTiles(urlTemplate = "https://tiles.emodnet-bathymetry.eu/2020/baselayer/web_mercator/{z}/{x}/{y}.png",
+                      group = "EMODnet Bathymetry",
+                      options = leaflet::tileOptions(pane = "basePane")) %>%
+    leaflet::addProviderTiles("CartoDB.Positron",
+                              group = "CartoDB.Positron",
+                              options = leaflet::tileOptions(pane = "basePane")) %>%
+    leafem::addMouseCoordinates() %>%
+    leaflet.extras::addFullscreenControl() %>%
+    leaflet::addScaleBar(position = "bottomleft",
+                         options = leaflet::scaleBarOptions(maxWidth = 150, imperial = FALSE)) %>%
+    leaflet::addControl(html = north_arrow,
+                        position = "topleft",
+                        className = "fieldset {border: 0;}") %>%
+    leaflet::addLayersControl(
+      baseGroups = c("CartoDB.Positron", "Open Street Map", "EMODnet Bathymetry"),
+      options = layersControlOptions(collapsed = FALSE),
+      position = "bottomleft"
+    ) 
+}
+
+# 2. environmental map ----------------------------------------------------
+
+# --- helper: html for legend box ---
+legend_control <- function(id, title, img_url) {
+  paste0(
+    '<details id="', id, '" style="background:white;padding:0px;border-radius:0px;display:none;">',
+    '<summary style="cursor:pointer;font-weight:600;">', title, '</summary>',
+    '<img src="', img_url, '" />',
+    '</details>'
+  )
+}
+
+# --- main factory: returns the environmental WMS leaflet map ---
+make_env_wms_map <- function(
+    base_map,
+    wms_layers,
+    hide_groups = c(
+      "Bathymetry (multicolor)", "Seabed substrates", "Seabed habitats",
+      "Sea convention polygons", "Marine Spatial Plans",
+      "Submarine Power Cables (SPC)", "Shipwrecks"
+    )
+) {
+  
+  # TODO: make EEZ able to be toggled on/off
+  # EEZ legend
+  eez_legend <- "
+  <div class='leaflet-control eez-legend'
+       style='background:white;padding:0px 0px;border-radius:0px;'>
+    <div style='display:flex;align-items:center;gap:0px;'>
+      <span style='display:inline-block;width:34px;height:0px;
+                   border-top:1px solid #000000;'></span>
+      <span style='font-weight:600;'>Exclusive Economic Zone (EEZ) boundaries</span>
+    </div>
+  </div>
+  "
+  
+  legend_map <- list(
+    "Offshore Wind Farms (OWF)" = "legend-owf",
+    "Submarine Power Cables (SPC)" = "legend-spc",
+    "Marine Spatial Plans" = "legend-msp",
+    "Sea convention polygons" = "legend-sea_conventions",
+    "Shipwrecks" = "legend-shipwrecks",
+    "Bathymetry (multicolor)" = "legend-bathy",
+    "Seabed habitats" = "legend-seabedhabitats",
+    "Seabed substrates" = "legend-seabedsubstrates"
+  )
+  
+  overlay_sections <- list(
+    "Human Activities layers" = c(
+      "MSP", "Offshore Wind Farms (OWF)", "Submarine Power Cables (SPC)",
+      "Sea convention polygons", "Shipwrecks"
+    ),
+    "Natural layers" = c("Bathymetry (multicolor)", "Seabed substrates", "Seabed habitats")
+  )
+  
+  payload <- list(
+    legends = legend_map,
+    sections = overlay_sections
+  )
+  
+  map_wms <- base_map |>
+    # panes
+    leaflet::addMapPane("rasterPane", zIndex = 200) |>
+    leaflet::addMapPane("vectorPane", zIndex = 300) |>
+    leaflet::addMapPane("boundaryPane", zIndex = 400) |>
+    leaflet::addMapPane("markerPane", zIndex = 500) |>
+    
+    # OWF
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$owf$wms_base,
+      layers  = wms_layers$owf$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 1, pane = "boundaryPane"),
+      group   = "Offshore Wind Farms (OWF)"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-owf", "OWF status", wms_layers$owf$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # SPC
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$spc$wms_base,
+      layers  = wms_layers$spc$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 1, pane = "boundaryPane"),
+      group   = "Submarine Power Cables (SPC)"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-spc", "Cable owner", wms_layers$spc$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # MSP
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$msp$wms_base,
+      layers  = wms_layers$msp$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, pane = "vectorPane", opacity = 0.75),
+      group   = "Marine Spatial Plans"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-msp", "Human Activities", wms_layers$msp$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # Sea conventions
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$sea_conventions$wms_base,
+      layers  = wms_layers$sea_conventions$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 1, pane = "vectorPane"),
+      group   = "Sea convention polygons"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-sea_conventions", "Convention framework", wms_layers$sea_conventions$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # Seabed habitats
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$seabedhabitats$wms_base,
+      layers  = wms_layers$seabedhabitats$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, pane = "rasterPane"),
+      group   = "Seabed habitats"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-seabedhabitats", "Habitat type", wms_layers$seabedhabitats$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # Seabed substrates
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$seabedsubstrates$wms_base,
+      layers  = wms_layers$seabedsubstrates$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, pane = "rasterPane", opacity = 0.75),
+      group   = "Seabed substrates"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-seabedsubstrates", "Substrate type", wms_layers$seabedsubstrates$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # Bathymetry
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$bathy_multicolor$wms_base,
+      layers  = wms_layers$bathy_multicolor$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5, pane = "rasterPane"),
+      group   = "Bathymetry (multicolor)"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-bathy", "Depth", wms_layers$bathy_multicolor$legend_link)),
+      position = "topright"
+    ) |>
+    
+    # EEZ (VLIZ geoserver)
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$eez$wms_base,
+      layers  = wms_layers$eez$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, styles = "line_black", pane = "boundaryPane"),
+      group   = "Exclusive Economic Zones (EEZ)"
+    ) |>
+    
+    # Shipwrecks
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$shipwrecks$wms_base,
+      layers  = wms_layers$shipwrecks$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, pane = "markerPane"),
+      group   = "Shipwrecks"
+    ) |>
+    
+    # Shipwrecks EMODnet + legend
+    leaflet::addWMSTiles(
+      baseUrl = wms_layers$shipwrecks_emodnet$wms_base,
+      layers  = wms_layers$shipwrecks_emodnet$wms_layer_name,
+      options = leaflet::WMSTileOptions(format = "image/png", transparent = TRUE, opacity = 0.5, pane = "markerPane"),
+      group   = "Shipwrecks"
+    ) |>
+    leaflet::addControl(
+      html = htmltools::HTML(legend_control("legend-shipwrecks", "", wms_layers$shipwrecks_emodnet$legend_link)),
+      position = "topright"
+    ) |>
+    
+    leaflet::hideGroup(hide_groups)
+  
+  map_wms |>
+    # EEZ permanent legend
+    leaflet::addControl(html = htmltools::HTML(eez_legend), position = "topright") |>
+    
+    # Layer control
+    leaflet::addLayersControl(
+      baseGroups = c("CartoDB.Positron", "Open Street Map", "EMODnet Bathymetry"),
+      overlayGroups = names(legend_map),
+      options = leaflet::layersControlOptions(collapsed = FALSE),
+      position = "bottomleft"
+    ) |>
+    
+    # JS behaviour
+    htmlwidgets::onRender(
+      "
+      function(el, x, payload){
+        var map = this;
+        var legends  = (payload && payload.legends)  ? payload.legends  : {};
+        var sections = (payload && payload.sections) ? payload.sections : {};
+
+        function norm(s){ return (s || '').replace(/\\s+/g,' ').trim(); }
+
+        function showByLayer(layerName, visible){
+          var id = legends[layerName];
+          if(!id) return;
+          var node = document.getElementById(id);
+          if(!node) return;
+          node.style.display = visible ? 'block' : 'none';
+        }
+
+        function syncFromLayerControl(){
+          var inputs = el.querySelectorAll('.leaflet-control-layers-overlays input[type=checkbox]');
+          inputs.forEach(function(inp){
+            var label = inp.parentElement;
+            var name  = label ? norm(label.textContent) : null;
+            if(name && legends[name] !== undefined){
+              showByLayer(name, inp.checked);
+            }
+          });
+        }
+
+        function addBaseHeadingOnce(){
+          var ctl = el.querySelector('.leaflet-control-layers');
+          if(!ctl) return;
+          if(ctl.querySelector('.base-heading')) return;
+          var base = ctl.querySelector('.leaflet-control-layers-base');
+          if(!base) return;
+
+          var hd = document.createElement('div');
+          hd.className = 'base-heading';
+          hd.style.textAlign = 'left';
+          hd.style.fontWeight = '600';
+          hd.style.margin = '0 0 6px 0';
+          hd.textContent = 'Background map';
+          base.prepend(hd);
+        }
+
+        function insertOverlaySectionHeadings(){
+          var ctl = el.querySelector('.leaflet-control-layers');
+          if(!ctl) return;
+
+          var overlays = ctl.querySelector('.leaflet-control-layers-overlays');
+          if(!overlays) return;
+
+          overlays.querySelectorAll('.overlay-section-heading').forEach(function(n){ n.remove(); });
+
+          var labelByName = {};
+          overlays.querySelectorAll('label').forEach(function(lab){
+            var name = norm(lab.textContent);
+            if(name) labelByName[name] = lab;
+          });
+
+          Object.keys(sections).forEach(function(sectionName){
+            var layers = sections[sectionName] || [];
+            var firstLabel = null;
+
+            for(var i=0; i<layers.length; i++){
+              var nm = layers[i];
+              if(labelByName[nm]){
+                firstLabel = labelByName[nm];
+                break;
+              }
+            }
+            if(!firstLabel) return;
+
+            var heading = document.createElement('div');
+            heading.className = 'overlay-section-heading';
+            heading.textContent = sectionName;
+            heading.style.fontWeight = '600';
+            heading.style.margin = '8px 0 4px 0';
+            heading.style.paddingTop = '6px';
+            heading.style.borderTop = '1px solid rgba(0,0,0,0.15)';
+            heading.style.textAlign = 'left';
+
+            overlays.insertBefore(heading, firstLabel);
+          });
+        }
+
+        function makeLegendsScrollable(){
+          var maxH = Math.max(120, Math.floor(el.getBoundingClientRect().height * 0.5));
+          var legendsNodes = el.querySelectorAll('details[id^=\"legend-\"]');
+
+          legendsNodes.forEach(function(d){
+            d.style.maxHeight = maxH + 'px';
+            d.style.overflowY = 'auto';
+            d.style.overflowX = 'hidden';
+
+            var sum = d.querySelector('summary');
+            if(sum){
+              sum.style.position = 'sticky';
+              sum.style.top = '0';
+              sum.style.background = 'white';
+              sum.style.zIndex = '1';
+            }
+          });
+        }
+
+        Object.keys(legends).forEach(function(layerName){
+          showByLayer(layerName, false);
+        });
+
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            addBaseHeadingOnce();
+            insertOverlaySectionHeadings();
+            makeLegendsScrollable();
+            syncFromLayerControl();
+          });
+        });
+
+        map.on('overlayadd', function(e){ showByLayer(e.name, true); });
+        map.on('overlayremove', function(e){ showByLayer(e.name, false); });
+
+        map.on('layeradd layerremove', function(){
+          addBaseHeadingOnce();
+          insertOverlaySectionHeadings();
+          makeLegendsScrollable();
+          syncFromLayerControl();
+        });
+
+        window.addEventListener('resize', function(){
+          makeLegendsScrollable();
+        });
+      }
+      ",
+      data = payload
+    )
+}

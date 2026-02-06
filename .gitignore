@@ -1,13 +1,24 @@
+# files with a specific file type
+*.html
+*.shp
+*.nc
+#*.rds
+
+# specific folders
+#01_data/
+#02_code/archive
+
+
 # History files
 .Rhistory
 .Rapp.history
 
 # Session Data files
 .RData
-.RDataTmp
 
 # User-specific files
 .Ruserdata
+.Renviron
 
 # Example code in package build process
 *-Ex.R
@@ -39,11 +50,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
+#Data
+#/data
 
-# translation temp files
-po/*~
+#Documentation
+02_code/01_boosted_regression_trees/documentation/CopyOftemplate_formulas_files/
 
-# RStudio Connect folder
-rsconnect/
