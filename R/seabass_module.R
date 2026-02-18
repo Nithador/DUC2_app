@@ -17,12 +17,12 @@ mod_seabass_ui <- function(id) {
   tabsetPanel(
     tabPanel("Migration predictions", mod_seabass_migration_ui(ns("migration"))),
     tabPanel("acoustic telemetry data", mod_seabass_telemetry_ui(ns("telemetry_data"))),
-    tabPanel("Environmental layers", mod_seabass_env_ui(ns("env")))
+    #tabPanel("Environmental layers", mod_seabass_env_ui(ns("env")))
   )
 }
 
 mod_seabass_server <- function(id, 
-                               deployments, 
+                               TEL_deployments, 
                                etn_monthyear_individual_sum, 
                                base_map_fun, 
                                prep_minicharts_inputs_fun, 
@@ -39,7 +39,7 @@ mod_seabass_server <- function(id,
     )
     
     # Prepare data for the leaflet minicharts (do this ONCE)
-    prepped_data <- prep_minicharts_inputs_fun(deployments, etn_monthyear_individual_sum)
+    prepped_data <- prep_minicharts_inputs_fun(TEL_deployments, etn_monthyear_individual_sum)
     
     # Telemetry submodule
     mod_seabass_telemetry_data_server(
@@ -49,13 +49,13 @@ mod_seabass_server <- function(id,
       base_map_fun = base_map_fun
     )
     
-    # Environmental submodule
-    mod_seabass_env_server(
-      "env", 
-      wms_layers = wms_layers,         # Use parameter name
-      base_map_fun = base_map_fun,     # Use parameter name
-      env_map_fun = make_env_wms_map_fun  # Use parameter name
-    )
+    # # Environmental submodule
+    # mod_seabass_env_server(
+    #   "env",
+    #   wms_layers = wms_layers,         # Use parameter name
+    #   base_map_fun = base_map_fun,     # Use parameter name
+    #   env_map_fun = make_env_wms_map_fun  # Use parameter name
+    # )
   })
 }
 

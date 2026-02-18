@@ -20,9 +20,27 @@ library(arrow)
 library(dplyr)
 library(lubridate)
 
+library(shiny)          # For the app
+library(leaflet)        # For the app format
+library(leaflet.extras) # Ditto
+library(mapedit)        # For making the map
+library(mapview)        # Making the map
+library(dplyr)          # Data Org
+library(lubridate)      # Date org
+library(Rmisc)          # Plotting functions
+library(ggpubr)         # Plotting functions
+library(bslib)          ## ?????
+library(stringr)        # Data org
+library(ggplot2)        # Plotting
+library(sf)
+
+##Functions
+#source('DPHpDPDplot.R')
+#source('DiurnalPlot.R')
+load('data/DTO_DUC2_PpData.Rdata')
 
 # Load data ---------------------------------------------------------------
-deployments <- readRDS("data/deployments.rds")
+TEL_deployments <- readRDS("data/TEL_deployments.rds")
 
 # Load STAC metadata ------------------------------------------------------
 wms_layers <- load_STAC_metadata(metadata_csv = "data/EDITO_STAC_layers_metadata.csv")
@@ -49,7 +67,7 @@ ui <- fluidPage(
     tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
   ),
   
-  titlePanel("DUC2: Impact from offshore infrastructures on marine life"),
+  titlePanel("Marine life habitat use in potential offshore infrastructure areas"),
   
   mainPanel(
     width = 12,
@@ -77,7 +95,7 @@ ui <- fluidPage(
                              bioflow_url = bioflow_url, 
                              bioflow_duc2_url = bioflow_duc2_url,
                              colors = dto_colors)),
-        
+        #Seabass tab
         tabPanel(
           title = tagList(
             tags$img(src = "D_labrax_phylopic_CC0.png", height = "24px",
@@ -88,6 +106,7 @@ ui <- fluidPage(
           mod_seabass_ui("seabass")
         ),
         
+        #Porpoise Tab
         tabPanel(
           title = tagList(
             tags$img(src = "P_phocoena_phylopic_CC0.png", height = "24px",
@@ -96,6 +115,13 @@ ui <- fluidPage(
           ),
           class = "lower-level-tabs",
           mod_porpoise_ui("porpoise")
+        ), 
+        
+        #Environmental Tab
+        tabPanel(
+          title = tags$span("Environmental Layers", style = "font-size: 16px; vertical-align:middle;"),
+          class = "lower-level-tabs",
+          mod_env_ui("env_map")
         )
       )
     )
@@ -110,16 +136,23 @@ server <- function(input, output, session) {
   # In app.R server function
   mod_seabass_server(
     "seabass", 
-    deployments = deployments, 
+    TEL_deployments = TEL_deployments, 
     etn_monthyear_individual_sum = etn_monthyear_individual_sum, 
     base_map_fun = make_base_map,                    # Global function
     prep_minicharts_inputs_fun = prep_minicharts_inputs,  # Global function
-    make_env_wms_map_fun = make_env_wms_map,        # Global function
+  #  make_env_wms_map_fun = make_env_wms_map,        # Global function
     telemetry_gam_s3 = telemetry_gam_s3,            # Data loaded in app.R
-    wms_layers = wms_layers                          # Data loaded in app.R
   )
 
   mod_porpoise_server("porpoise")
+  
+  mod_env_server(
+    'env',
+    wms_layers = wms_layers ,                         # Data loaded in app.R
+    base_map_fun = make_base_map,                    # Global function
+    make_env_wms_map_fun = make_env_wms_map       # Global function
+    
+  )
 }
 
 shinyApp(ui, server)
