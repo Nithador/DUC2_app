@@ -20,13 +20,8 @@ library(arrow)
 library(dplyr)
 library(lubridate)
 
-library(shiny)          # For the app
-library(leaflet)        # For the app format
-library(leaflet.extras) # Ditto
-library(mapedit)        # For making the map
-library(mapview)        # Making the map
-library(dplyr)          # Data Org
-library(lubridate)      # Date org
+library(mapview)        # Making the PAM map
+library(mapedit)        # For making the PAM map
 library(Rmisc)          # Plotting functions
 library(ggpubr)         # Plotting functions
 library(bslib)          ## ?????
@@ -34,12 +29,11 @@ library(stringr)        # Data org
 library(ggplot2)        # Plotting
 library(sf)
 
-##Functions
-#source('DPHpDPDplot.R')
-#source('DiurnalPlot.R')
+
+# Load PAM data -----------------------------------------------------------
 load('data/DTO_DUC2_PpData.Rdata')
 
-# Load data ---------------------------------------------------------------
+# Load TEL data -----------------------------------------------------------
 TEL_deployments <- readRDS("data/TEL_deployments.rds")
 
 # Load STAC metadata ------------------------------------------------------

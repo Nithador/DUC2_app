@@ -5,7 +5,7 @@ mod_porpoise_ui <- function(id) {
     
     layout_columns(
       card(card_header("Map"), 
-           editModUI("editor", height = "100%"),
+           leafletOutput(ns("map"), height = "100%"),   # ADD THIS
            fill=TRUE,
            width = "100%"
            
@@ -57,7 +57,18 @@ mod_porpoise_server <- function(id) {
         layer.name = 'POD Location'
       )
     
+    
+
+    
+    # Render map (if using editor)
+    
+    output$map <- leaflet::renderLeaflet({
+      m@map
+    })
+    
+    # Capture edits
     edits <- callModule(editMod, "editor", m@map)
+    
     
     # Reactive expression for selected points
     selected_points <- reactive({
