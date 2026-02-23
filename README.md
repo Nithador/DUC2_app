@@ -1,6 +1,6 @@
-# DUC2 Viewer - Acoustic Telemetry RShiny Application
+# Marine life habitat use in potential offshore infrastructure areas
 
-An interactive RShiny application for visualizing acoustic telemetry data and environmental layers for the DTO-Bioflow Digital Use Case 2 (DUC2): Impact of Offshore Energy Installations on Marine Life.
+An interactive RShiny application for visualizing acoustic telemetry data, passive acoustic detection and classification data, and environmental layers for the DTO-Bioflow Digital Use Case 2 (DUC2): Impact of Offshore Energy Installations on Marine Life.
 
 ![DTO-Bioflow logo](www/Logo_BIO-Flow2023_Final_Positive.png)
 
@@ -9,7 +9,8 @@ An interactive RShiny application for visualizing acoustic telemetry data and en
 This application is part of the Horizon Europe-funded project **DTO-Bioflow** ([dto-bioflow.eu](https://dto-bioflow.eu), Grant ID 101112823, <https://doi.org/10.3030/101112823>). It provides interactive visualizations of:
 
 -   **Acoustic telemetry data** from the [European Tracking Network](https://www.lifewatch.be/etn/)
--   **Species migration predictions** (European seabass, harbour porpoise)
+-   **Passive Acoustic Monitoring (PAM) data** from the [European Tracking Network](https://www.lifewatch.be/cpod-data/)
+-   **Species migration predictions** (European seabass)
 -   **Environmental layers** via WMS services from [EDITO STAC catalog](https://viewer.dive.edito.eu/map?c=0,0,2.26&catalog=https:%2F%2Fapi.dive.edito.eu%2Fdata%2Fcatalogs)
 
 🔗 Learn more: [DUC2 - Impact of Offshore Infrastructures](https://dto-bioflow.eu/use-cases/duc-2-impact-offshore-infrastructures)
@@ -24,7 +25,7 @@ This application is part of the Horizon Europe-funded project **DTO-Bioflow** ([
 
 ### Harbour Porpoise (*Phocoena phocoena*)
 
--   Species distribution data
+-   Acoustic Density Data and Visualization
 -   Environmental correlates
 
 ## 🚀 Installation
@@ -74,6 +75,8 @@ DUC2_viewer/
 ├── R/                            # All R scripts (modules, helpers, config)
 │   ├── 00_config.R               # Configuration (colors, URLs)
 │   │
+│   ├── DiurnalPlot.R             # Diurnal plor for PAM data
+│   ├── DPHpDPDplot.R             # Detection Positive Hours (DPH) per Detection Positive Days (DPD) plot for PAM data
 │   ├── module_home.R             # Home page module
 │   ├── module_porpoise.R         # Harbour porpoise module
 │   │
@@ -88,16 +91,19 @@ DUC2_viewer/
 │   └── helper_wrangle_acoustic_telemetry_data.R # Data wrangling functions
 │
 ├── data/                         # Data files
-│   ├── animals.rds               # Tagged animal metadata
-│   ├── deployments.rds           # Acoustic receiver deployments
-│   ├── detections.rds            # Raw detection data
+
+│   ├── DTO_DUC2_PpData.Rdata     # Harbour Porpoise PAM data
 │   ├── etn_sum_seabass.rds       # Seabass detection summaries
 │   ├── etn_sum_seabass_monthyear_individual.rds       # Monthly individual summaries
 │   ├── etn_sum_seabass_monthyear_individual_subset.rds # Subset for testing
-│   └── EDITO_STAC_layers_metadata.csv  # STAC environmental layer metadata
+│   ├── EDITO_STAC_layers_metadata.csv  # STAC environmental layer metadata
+│   ├── TEL_animals.rds           # Tagged animal metadata telemetry
+│   ├── TEL_deployments.rds       # Telemetry acoustic receiver deployments
+│   └── TEL_detections.rds        # Raw telemetry detection data
 │
 └── www/                          # Static web assets
     ├── app.css                   # Custom CSS styles
+    ├── AU Logo.png               # Aarhus University Logo
     ├── Logo_BIO-Flow2023_Final_Positive.png    # DTO-Bioflow logo (light)
     ├── Logo_BIO-Flow2023_Final_Negative.png    # DTO-Bioflow logo (dark)
     ├── D_labrax_phylopic_CC0.png               # Seabass icon
@@ -117,6 +123,8 @@ DUC2_viewer/
 | `R/maps.R` | Map rendering functions (base map, environmental WMS) |
 | `R/helper_*.R` | Helper functions for data loading and processing |
 | `R/EDITO_STAC_data.R` | Functions to load STAC catalog metadata |
+| `R/DiurnalPlot.R` | Plotting function for PAM data
+| `R/DPHpDPDplot.R` | Plotting function for PAM data
 | `Dockerfile` | Container configuration for deployment |
 | `renv.lock` | Package dependency snapshot for reproducibility |
 
@@ -298,7 +306,7 @@ mod_seabass_migration_server <- function(id, base_map_fun) {
 
 -   **Flanders Marine Institute (VLIZ)** [Marine Observation Centre, VLIZ](https://vliz.be/en/what-we-do/research/marine-observation-centre) - Lotte Pohl - [lotte.pohl\@vliz.be](mailto:lotte.pohl@vliz.be){.email}, Jo-Hannes Nowé - [johannes.nowe\@vliz.be](mailto:johannes.nowe@vliz.be){.email}
 
--   Aarhus University: Emily T. Griffiths, Mia Kronborg, Ellen Jacobs, (..)
+-   Aarhus University: Emily T. Griffiths, Mia Kronborg, Ellen Jacobs
 
 -   Technical University of Denmark: Asbjørn Christensen
 
