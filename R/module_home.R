@@ -7,13 +7,23 @@ mod_home_ui <- function(id,
   fluidRow(
     column(
       width = 12,
-      h3("Welcome! 👋"),
-      p("Do you want to learn more about marine life and how it is influenced by offshore infrastructures? You're in the right place!"),
+      h2("Welcome! 👋"),
+      p("Do you want to learn more about marine life and how it may be influenced by offshore infrastructures? You're in the right place!"),
       
-      h4("How to use this app"),
+      h3("How to use this app"),
+      
+      hr(),
+      h4('European Seabass Data'),
       p("<explanations>", style = "margin-bottom: 200px;"),
       
-      h4("Want to learn more?"),
+      hr(),
+      h4('Harbour Porpoise Data'),
+      p("Here one can visualize acoustic density data for the Harbour Porpoise. Data is visualized over time (days/weeks/months/years) and dirunal patterns.",br(),
+        "Using the rectangle tool on the left side of the map, select which stations you would like to view the data from. Plots will be automatically generated.  You can add and remove stations as you go, as well as adjust the dates.", br(),
+        "Note: You should have at least five stations collecting data simultaneously in a given area in order to infer any meaningful pattern from porpoise acoustic density. ", style = "margin-bottom: 200px;"),
+      
+      
+      h6("Want to learn more?"),
       p("Click the buttons below!"),
       
       tags$div(
