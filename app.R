@@ -28,6 +28,8 @@ library(bslib)          ## ?????
 library(stringr)        # Data org
 library(ggplot2)        # Plotting
 library(sf)
+library(viridisLite)   # palette
+library(htmltools)
 
 
 # Load PAM data -----------------------------------------------------------
@@ -138,7 +140,14 @@ server <- function(input, output, session) {
     telemetry_gam_s3 = telemetry_gam_s3,            # Data loaded in app.R
   )
 
-  mod_porpoise_server("porpoise")
+  mod_porpoise_server(
+    id = "porpoise",
+    base_map_fun    = make_base_map,                    # Global function
+    SCANS_shape     = SCANS_shape,
+    POD_loc_sf      = POD_loc_sf,
+    PAM_data        = PAM_data,
+    POD_locations   = POD_locations
+                    )
   
   mod_env_server(
     'env',

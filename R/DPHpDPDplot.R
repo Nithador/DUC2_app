@@ -1,3 +1,14 @@
+##################################################################################
+##################################################################################
+
+# Author: Emily T. Griffiths, Aarhus University
+# Email: emilytgriffiths@ecos.au.dk
+# Date: 2026-02-19
+# Script Description: Generates the DPH per DPD plot within the porpoise module.
+
+##################################################################################
+##################################################################################
+
 library(dplyr)
 
 DPHpDPDplot = function(selected_data){ 
