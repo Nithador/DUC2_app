@@ -42,7 +42,7 @@ build_monthyear_rds <- function(
       
       # if STAC etn data are unavailable - to remove later
       etn_dataset <-
-        readRDS("./data/detections.rds") %>%
+        readRDS("./data/TEL_detections.rds") %>%
         dplyr::rename(latitude = deploy_latitude,
                       longitude = deploy_longitude,
                       datetime = date_time)
