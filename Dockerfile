@@ -1,11 +1,14 @@
 # Base: R in a Debian Linux environment
-FROM rocker/shiny:4.5
+FROM rocker/geospatial:4.5.1
 
 # Install system dependencies for R packages
 RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
     make \
     pandoc \
     cmake \
+    libuv1-dev \
     gdal-bin \
     libgdal-dev \
     libgeos-dev \
@@ -26,15 +29,17 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /usr/src/app
 
+RUN R -e 'install.packages("renv", repos="https://cloud.r-project.org")'
+# Install renv and restore packages
+
 # Copy renv.lock and renv folder first for caching
 COPY renv.lock renv.lock
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.json renv/settings.json
 COPY .Rprofile .Rprofile
-# Install renv and restore packages
 
-RUN R -e 'install.packages("renv", repos="https://cloud.r-project.org")' \
-    && R -e 'renv::restore()'
+# Restore packages
+RUN R -e "renv::restore(lockfile='renv.lock', prompt=FALSE, clean=TRUE)"
 
 # Copy all R files
 COPY www/ ./www/
