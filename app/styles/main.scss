@@ -1,0 +1,86 @@
+// ── Variables ────────────────────────────────────────────────────────────────
+// Pulled from CSS custom properties set at runtime; define fallbacks here
+// so the SCSS file can also be compiled standalone for tooling.
+$blue-light:  var(--blue-light,  #a8c8e8);
+$blue-medium: var(--blue-medium, #4a90c4);
+$blue-dark:   var(--blue-dark,   #1a4a7a);
+
+// ── Navbar logo ──────────────────────────────────────────────────────────────
+.navbar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+
+  img {
+    display: block;
+  }
+}
+
+// ── Right-aligned navbar page title ─────────────────────────────────────────
+.navbar-page-title {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--blue-dark);
+  white-space: nowrap;
+}
+
+// ── Lower-level tab strips (Seabass / Porpoise inner tabs) ───────────────────
+.lower-level-tabs {
+  .nav-tabs {
+    background-color: var(--blue-dark) !important;
+    padding: 6px 6px 0;
+    border-radius: 6px;
+  }
+
+  .nav-link {
+    color: white !important;
+
+    &.active,
+    .nav-item.show > & {
+      background-color: white !important;
+      color: var(--blue-dark) !important;
+      border-color: white !important;
+    }
+  }
+}
+
+// ── Card header styling ──────────────────────────────────────────────────────
+.bslib-card .card-header {
+    background-color: var(--blue-dark) !important;
+    color: white !important;
+}
+
+// ── Home page buttons ─────────────────────────────────────────────────────────
+.bioflow-btn {
+  background-color: var(--blue-medium) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.bioflow-btn--block {
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bioflow-btn--logo {
+  height: 60px;
+}
+
+// ── Acoustic telemetry legend control ────────────────────────────────────────
+.idLegendCtrl {
+  background: white;
+  padding: 10px 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+
+  .id-legend-scroll {
+    width: 150px;
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
