@@ -66,38 +66,36 @@ mod_porpoise_ui <- function(id) {
 
   page_fillable(
     layout_columns(
-      card(card_header("Map"), leafletOutput(ns("map"), height = '650px')),
+      card(card_header("Map"), leafletOutput(ns("map"), height = "650px")),
       navset_card_tab(
         nav_panel(
           title = "Detection Positive Hours per Day",
-          plotOutput('dph_plot', height = '600px')
+          plotOutput("dph_plot", height = "600px")
         ),
         nav_panel(
-          title = 'Daily Distribution of Detections',
-          plotOutput('diurnal_plot', height = '650px')
+          title = "Daily Distribution of Detections",
+          plotOutput("diurnal_plot", height = "650px")
         )
-        #,
-        #nav_panel(title = 'Pressure Curve?', p('TBD'))
+        # ,
+        # nav_panel(title = 'Pressure Curve?', p('TBD'))
       ),
-
       card(card_header("Station Details"), tableOutput("station_table")),
       card(
-        card_header('Settings'),
+        card_header("Settings"),
         sliderInput(
-          'YMselect',
-          'Dates:',
-          min = as.Date('2015-01-01', '%Y-%m-%d'),
-          max = as.Date(Sys.Date(), '%Y-%m-%d'),
+          "YMselect",
+          "Dates:",
+          min = as.Date("2015-01-01", "%Y-%m-%d"),
+          max = as.Date(Sys.Date(), "%Y-%m-%d"),
           value = c(
-            as.Date('2015-01-01', '%Y-%m-%d'),
-            as.Date(Sys.Date(), '%Y-%m-%d')
+            as.Date("2015-01-01", "%Y-%m-%d"),
+            as.Date(Sys.Date(), "%Y-%m-%d")
           )
         ),
-        imageOutput('logo'),
+        imageOutput("logo"),
       ), ## Update this if older data is incorporated
-
       col_widths = c(6, 6, 8, 4),
-      #row_heights = c(3,1)
+      # row_heights = c(3,1)
     )
   )
 }
@@ -125,7 +123,6 @@ mod_porpoise_server <- function(
     # ---- BUILD HP MAP
     porp_map <- base_map_fun(lng = 3, lat = 51.5, zoom = 8) |>
       addMapPane("dataPane", zIndex = 410) |>
-
       # Density polygons (SCANS IV)
       addPolygons(
         data = SCANS_shape,
@@ -136,12 +133,11 @@ mod_porpoise_server <- function(
         group = "SCANS IV Porpoise Density",
         options = pathOptions(pane = "dataPane")
       ) |>
-
       # POD locations
       addCircleMarkers(
         data = POD_loc_sf,
-        #lng = ~st_coordinates(.)[,1],
-        #lat = ~st_coordinates(.)[,2],
+        # lng = ~st_coordinates(.)[,1],
+        # lat = ~st_coordinates(.)[,2],
         radius = 4,
         fillColor = "red",
         color = "red",
@@ -151,7 +147,6 @@ mod_porpoise_server <- function(
         layerId = ~Station, # REQUIRED for selection logic
         options = pathOptions(pane = "dataPane")
       ) |>
-
       # Legend
       addLegend(
         position = "bottomright",
@@ -160,7 +155,6 @@ mod_porpoise_server <- function(
         title = "SCANS IV Porpoise Density",
         opacity = 1
       ) |>
-
       # boxing tool
       addDrawToolbar(
         targetGroup = "draw",
@@ -182,7 +176,6 @@ mod_porpoise_server <- function(
           selectedPathOptions = selectedPathOptions()
         )
       ) |>
-
       # Allow toggling overlays
       addLayersControl(
         baseGroups = c(
@@ -190,7 +183,7 @@ mod_porpoise_server <- function(
           "Open Street Map",
           "EMODnet Bathymetry"
         ),
-        overlayGroups = c("SCANS IV Porpoise Density", "POD Location", 'draw'),
+        overlayGroups = c("SCANS IV Porpoise Density", "POD Location", "draw"),
         options = layersControlOptions(collapsed = FALSE),
         position = "bottomleft"
       )
@@ -201,7 +194,7 @@ mod_porpoise_server <- function(
     })
 
     # ---- Spatial edit/selection handling ----  for old map
-    #edits <- callModule(editMod, "editor", porp_map)
+    # edits <- callModule(editMod, "editor", porp_map)
 
     # ReactiveVal to hold the *current* rectangle bbox as an sfc
     selected_bbox_rv <- reactiveVal(NULL)
@@ -283,7 +276,7 @@ mod_porpoise_server <- function(
     # Reactive expression for filtered data
 
     selected_data <- reactive({
-      sp = selected_points()
+      sp <- selected_points()
 
       if (nrow(sp) == 0) {
         return(
@@ -292,9 +285,9 @@ mod_porpoise_server <- function(
         )
       }
 
-      #req(selected_points())
+      # req(selected_points())
       selected_groups <- unique(sp$Station)
-      data = PAM_data |>
+      data <- PAM_data |>
         filter(Station %in% selected_groups) |>
         select(Station, datetime, PPM)
 
@@ -310,8 +303,7 @@ mod_porpoise_server <- function(
 
     filtered_data <- reactive({
       req(selected_data())
-      data = selected_data() |>
-
+      data <- selected_data() |>
         filter(datetime >= input$YMselect[1], datetime <= input$YMselect[2])
 
       if (length(unique(data$Station)) < 5) {
@@ -345,20 +337,20 @@ mod_porpoise_server <- function(
     # Example output: print selected data structure
     output$dph_plot <- renderPlot({
       req(filtered_data())
-      #print(str(selected_data()))
+      # print(str(selected_data()))
       DPHpDPDplot(filtered_data())
     })
 
     output$diurnal_plot <- renderPlot({
       req(filtered_data())
       req(selectLocs)
-      #print(str(selected_data()))
+      # print(str(selected_data()))
       diurnalPlot(filtered_data(), selectLocs())
     })
 
     output$logo <- renderImage(
       {
-        list(src = 'assets/AU logo.png', height = '5%')
+        list(src = "assets/AU logo.png", height = "5%")
       },
       deleteFile = FALSE
     )

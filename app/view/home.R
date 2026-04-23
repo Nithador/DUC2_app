@@ -1,7 +1,8 @@
 box::use(
-  shiny[NS, fluidRow, column, h2, h3, h4, h6, p, hr, br, tags, moduleServer],
+  shiny[NS, h2, h3, h4, h6, p, hr, br, tags, moduleServer],
+  bslib[layout_columns],
   glue[glue],
-  app/logic/config[dto_colors, bioflow_url, bioflow_duc2_url]
+  app / logic / config[dto_colors, bioflow_url, bioflow_duc2_url]
 )
 
 mod_home_ui <- function(
@@ -12,9 +13,8 @@ mod_home_ui <- function(
 ) {
   ns <- NS(id)
 
-  fluidRow(
-    column(
-      width = 12,
+  layout_columns(
+    tags$div(
       h2("Welcome! 👋"),
       p(
         "Do you want to learn more about marine life and how it may be influenced by offshore infrastructures? You're in the right place!"
@@ -64,7 +64,8 @@ mod_home_ui <- function(
           class = "btn btn-primary bioflow-btn bioflow-btn--logo"
         )
       )
-    )
+    ),
+    col_widths = 12
   )
 }
 

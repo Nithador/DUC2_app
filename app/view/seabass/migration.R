@@ -3,17 +3,12 @@
 box::use(
   shiny[
     NS,
-    sidebarLayout,
-    sidebarPanel,
     radioButtons,
-    fluidRow,
-    column,
     actionButton,
     br,
     sliderInput,
     tags,
     textOutput,
-    mainPanel,
     moduleServer,
     renderText,
     req,
@@ -22,6 +17,7 @@ box::use(
     updateSliderInput,
     observe
   ],
+  bslib[layout_sidebar, sidebar, layout_columns],
   leaflet[
     leafletOutput,
     renderLeaflet,
@@ -40,9 +36,10 @@ box::use(
 mod_seabass_migration_ui <- function(id) {
   ns <- NS(id)
 
-  sidebarLayout(
-    sidebarPanel(
-      width = 3,
+  layout_sidebar(
+    sidebar = sidebar(
+      width = 320,
+      open = "open",
       radioButtons(
         ns("seabass_prediction"),
         "Seabass prediction layer",
@@ -52,9 +49,10 @@ mod_seabass_migration_ui <- function(id) {
           "Difference inside/outside OWF" = "Diff OWF"
         )
       ),
-      fluidRow(
-        column(6, actionButton(ns("prev_month"), "◀ Previous", width = "100%")),
-        column(6, actionButton(ns("next_month"), "Next ▶", width = "100%"))
+      layout_columns(
+        actionButton(ns("prev_month"), "◀ Previous", width = "100%"),
+        actionButton(ns("next_month"), "Next ▶", width = "100%"),
+        col_widths = c(6, 6)
       ),
       br(),
       sliderInput(
@@ -70,9 +68,7 @@ mod_seabass_migration_ui <- function(id) {
         textOutput(ns("month_label"))
       )
     ),
-    mainPanel(
-      leafletOutput(ns("seabass_migration_map"), height = 700)
-    )
+    leafletOutput(ns("seabass_migration_map"), height = 700)
   )
 }
 

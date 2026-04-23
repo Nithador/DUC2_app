@@ -3,15 +3,10 @@
 box::use(
   shiny[
     NS,
-    sidebarLayout,
-    sidebarPanel,
     selectInput,
-    fluidRow,
-    column,
     actionButton,
     checkboxInput,
     uiOutput,
-    mainPanel,
     moduleServer,
     observeEvent,
     reactiveVal,
@@ -21,6 +16,7 @@ box::use(
     tagList,
     tags
   ],
+  bslib[layout_sidebar, sidebar, layout_columns],
   leaflet[
     leafletOutput,
     renderLeaflet,
@@ -58,9 +54,10 @@ box::use(
 mod_seabass_telemetry_ui <- function(id) {
   ns <- NS(id)
 
-  sidebarLayout(
-    sidebarPanel(
-      height = 2000,
+  layout_sidebar(
+    sidebar = sidebar(
+      width = 320,
+      open = "open",
       selectInput(
         ns("prods"),
         "Select individuals",
@@ -68,15 +65,10 @@ mod_seabass_telemetry_ui <- function(id) {
         selected = NULL,
         multiple = TRUE
       ),
-      fluidRow(
-        column(
-          6,
-          actionButton(ns("prev_month"), "◀ Previous month", width = "100%")
-        ),
-        column(
-          6,
-          actionButton(ns("next_month"), "Next month ▶", width = "100%")
-        )
+      layout_columns(
+        actionButton(ns("prev_month"), "◀ Previous month", width = "100%"),
+        actionButton(ns("next_month"), "Next month ▶", width = "100%"),
+        col_widths = c(6, 6)
       ),
       selectInput(
         ns("type"),
@@ -86,9 +78,7 @@ mod_seabass_telemetry_ui <- function(id) {
       checkboxInput(ns("labels"), "Show values", value = FALSE),
       uiOutput(ns("month_summary"))
     ),
-    mainPanel(
-      leafletOutput(ns("map"), height = 1000)
-    )
+    leafletOutput(ns("map"), height = 1000)
   )
 }
 

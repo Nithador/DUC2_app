@@ -1,14 +1,13 @@
 box::use(
   shiny[
     NS,
-    fluidPage,
-    mainPanel,
     moduleServer,
     tagList,
-    tabPanel,
-    tabsetPanel,
-    tags,
-    titlePanel
+    tags
+  ],
+  bslib[
+    page_navbar,
+    nav_panel
   ],
   app /
     logic /
@@ -49,8 +48,20 @@ etn_monthyear_individual_sum <- build_monthyear_rds(
 #' @export
 ui <- function(id) {
   ns <- NS(id)
-  fluidPage(
-    tags$head(
+  page_navbar(
+    title = tags$a(
+      href = bioflow_url,
+      target = "_blank",
+      rel = "noopener",
+      class = "navbar-logo-link",
+      tags$img(
+        src = "assets/Logo_BIO-Flow2023_Final_Positive.png",
+        height = "42px",
+        alt = "DTO-Bioflow"
+      )
+    ),
+    id = ns("tabsetPanelID"),
+    header = tags$head(
       tags$style(htmltools::HTML(glue::glue(
         "\
       :root {{
@@ -60,83 +71,95 @@ ui <- function(id) {
       }}
     "
       ))),
-      tags$link(rel = "stylesheet", type = "text/css", href = "assets/app.css")
+      tags$link(rel = "stylesheet", type = "text/css", href = "assets/css/app.min.css")
     ),
-    titlePanel(
-      "Marine life habitat use in potential offshore infrastructure areas"
-    ),
-    mainPanel(
-      width = 12,
-      tags$div(
-        class = "top-tabs container-fluid",
-        tags$a(
-          href = bioflow_url,
-          target = "_blank",
-          rel = "noopener",
-          class = "top-tabs-logo",
-          tags$img(
-            src = "assets/Logo_BIO-Flow2023_Final_Positive.png",
-            height = "42px",
-            alt = "DTO-Bioflow"
+    sidebar = bslib::sidebar(
+      width = 320,
+      open = "desktop",
+      title = "Global sidebar",
+      tags$p("Quick links:"),
+      tags$ul(
+        tags$li(
+          tags$a(
+            href = bioflow_url,
+            target = "_blank",
+            rel = "noopener",
+            "BIO-Flow"
           )
         ),
-        tabsetPanel(
-          id = ns("tabsetPanelID"),
-          type = "tabs",
-          tabPanel(
-            "Home",
-            style = "font-size: 16px;",
-            mod_home_ui(
-              ns("home"),
-              bioflow_url = bioflow_url,
-              bioflow_duc2_url = bioflow_duc2_url,
-              colors = dto_colors
-            )
-          ),
-          tabPanel(
-            title = tagList(
-              tags$img(
-                src = "assets/D_labrax_phylopic_CC0.png",
-                height = "24px",
-                style = "vertical-align:middle; margin-right:8px;"
-              ),
-              tags$span(
-                "European seabass",
-                style = "font-size: 16px; vertical-align:middle;"
-              )
-            ),
-            class = "lower-level-tabs",
-            mod_seabass_ui(ns("seabass"))
-          ),
-          tabPanel(
-            title = tagList(
-              tags$img(
-                src = "assets/P_phocoena_phylopic_CC0.png",
-                height = "24px",
-                style = "vertical-align:middle; margin-right:8px;"
-              ),
-              tags$span(
-                "Harbour porpoise",
-                style = "font-size: 16px; vertical-align:middle;"
-              )
-            ),
-            class = "lower-level-tabs",
-            mod_porpoise_ui(ns("porpoise"))
-          ),
-          tabPanel(
-            title = tags$span(
-              "Environmental Layers",
-              style = "font-size: 16px; vertical-align:middle;"
-            ),
-            class = "lower-level-tabs",
-            mod_env_ui(
-              ns("env"),
-              base_map_fun = make_base_map,
-              make_env_wms_map_fun = make_env_wms_map,
-              wms_layers = wms_layers
-            )
+        tags$li(
+          tags$a(
+            href = bioflow_duc2_url,
+            target = "_blank",
+            rel = "noopener",
+            "BIO-Flow DUC2"
           )
         )
+      )
+    ),
+    window_title = "Marine life habitat use in potential offshore infrastructure areas",
+    navbar_options = bslib::navbar_options(
+      bg = "var(--blue-light)",
+      theme = "light",
+      underline = TRUE
+    ),
+    nav_panel(
+      "Home",
+      mod_home_ui(
+        ns("home"),
+        bioflow_url = bioflow_url,
+        bioflow_duc2_url = bioflow_duc2_url,
+        colors = dto_colors
+      )
+    ),
+    nav_panel(
+      title = tagList(
+        tags$img(
+          src = "assets/D_labrax_phylopic_CC0.png",
+          height = "24px",
+          style = "vertical-align:middle; margin-right:8px;"
+        ),
+        tags$span(
+          "European seabass",
+          style = "font-size: 16px; vertical-align:middle;"
+        )
+      ),
+      class = "lower-level-tabs",
+      mod_seabass_ui(ns("seabass"))
+    ),
+    nav_panel(
+      title = tagList(
+        tags$img(
+          src = "assets/P_phocoena_phylopic_CC0.png",
+          height = "24px",
+          style = "vertical-align:middle; margin-right:8px;"
+        ),
+        tags$span(
+          "Harbour porpoise",
+          style = "font-size: 16px; vertical-align:middle;"
+        )
+      ),
+      class = "lower-level-tabs",
+      mod_porpoise_ui(ns("porpoise"))
+    ),
+    nav_panel(
+      title = tags$span(
+        "Environmental Layers",
+        style = "font-size: 16px; vertical-align:middle;"
+      ),
+      class = "lower-level-tabs",
+      mod_env_ui(
+        ns("env"),
+        base_map_fun = make_base_map,
+        make_env_wms_map_fun = make_env_wms_map,
+        wms_layers = wms_layers
+      )
+    ),
+    bslib::nav_spacer(),
+    bslib::nav_item(
+      tags$span(
+        class = "navbar-page-title",
+        "Marine life habitat use in potential offshore infrastructure areas"
       )
     )
   )
