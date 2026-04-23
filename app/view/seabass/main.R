@@ -5,42 +5,70 @@
 # Email: lotte.pohl@vliz.be
 # Date: 2026-02-03
 # Script Name: ~/DUC2_viewer_acoustic_telemetry/R/module_seabass_telemetry.R
-# Script Description: make the Tab of seabass, containing a map on migration predictions, 
+# Script Description: make the Tab of seabass, containing a map on migration predictions,
 #                     acoustic telemetry data and environmental layers
 
 ##################################################################################
 ##################################################################################
 
+box::use(
+  shiny[NS, tabsetPanel, tabPanel, moduleServer],
+  app /
+    view /
+    seabass /
+    migration[
+      mod_seabass_migration_ui,
+      mod_seabass_migration_server
+    ],
+  app /
+    view /
+    seabass /
+    telemetry_data[
+      mod_seabass_telemetry_ui,
+      mod_seabass_telemetry_data_server
+    ]
+)
+
 mod_seabass_ui <- function(id) {
   ns <- NS(id)
-  
+
   tabsetPanel(
-    tabPanel("Migration predictions", mod_seabass_migration_ui(ns("migration"))),
-    tabPanel("acoustic telemetry data", mod_seabass_telemetry_ui(ns("telemetry_data"))),
+    tabPanel(
+      "Migration predictions",
+      mod_seabass_migration_ui(ns("migration"))
+    ),
+    tabPanel(
+      "acoustic telemetry data",
+      mod_seabass_telemetry_ui(ns("telemetry_data"))
+    ),
     #tabPanel("Environmental layers", mod_seabass_env_ui(ns("env")))
   )
 }
 
-mod_seabass_server <- function(id, 
-                               TEL_deployments, 
-                               etn_monthyear_individual_sum, 
-                               base_map_fun, 
-                               prep_minicharts_inputs_fun, 
-                               make_env_wms_map_fun,
-                               telemetry_gam_s3, 
-                               wms_layers) {     
+mod_seabass_server <- function(
+  id,
+  TEL_deployments,
+  etn_monthyear_individual_sum,
+  base_map_fun,
+  prep_minicharts_inputs_fun,
+  make_env_wms_map_fun,
+  telemetry_gam_s3,
+  wms_layers
+) {
   moduleServer(id, function(input, output, session) {
-    
     # Migration submodule
     mod_seabass_migration_server(
       "migration",
       telemetry_gam_s3 = telemetry_gam_s3,
-      base_map_fun = base_map_fun  # Pass the parameter, not global function
+      base_map_fun = base_map_fun # Pass the parameter, not global function
     )
-    
+
     # Prepare data for the leaflet minicharts (do this ONCE)
-    prepped_data <- prep_minicharts_inputs_fun(TEL_deployments, etn_monthyear_individual_sum)
-    
+    prepped_data <- prep_minicharts_inputs_fun(
+      TEL_deployments,
+      etn_monthyear_individual_sum
+    )
+
     # Telemetry submodule
     mod_seabass_telemetry_data_server(
       "telemetry_data",
@@ -48,7 +76,7 @@ mod_seabass_server <- function(id,
       etn_monthyear_individual_sum = etn_monthyear_individual_sum,
       base_map_fun = base_map_fun
     )
-    
+
     # # Environmental submodule
     # mod_seabass_env_server(
     #   "env",
@@ -59,11 +87,10 @@ mod_seabass_server <- function(id,
   })
 }
 
-
-# 
+#
 # mod_seabass_ui <- function(id) {
 #   ns <- NS(id)
-#   
+#
 #   tabsetPanel(
 #     tabPanel(
 #       "Migration predictions",
@@ -107,15 +134,15 @@ mod_seabass_server <- function(id,
 #              leafletOutput(ns("env_map"), height = 700))
 #   )
 # }
-# 
+#
 # mod_seabass_server <- function(id) {
 #   moduleServer(id, function(input, output, session) {
-#     
+#
 #     output$month_label <- renderText({
 #       req(input$month)
 #       month.name[input$month]
 #     })
-#     
+#
 #     current_raster_stack <- reactive({
 #       req(input$seabass_prediction)
 #       if (input$seabass_prediction == "inside") {
@@ -126,7 +153,7 @@ mod_seabass_server <- function(id,
 #         prediction_layers[["Diff OWF"]]
 #       }
 #     })
-#     
+#
 #     current_palette <- reactive({
 #       req(input$seabass_prediction)
 #       if (input$seabass_prediction == "inside") {
@@ -137,48 +164,48 @@ mod_seabass_server <- function(id,
 #         prediction_palettes[["Diff OWF"]]
 #       }
 #     })
-#     
+#
 #     output$seabass_migration_map <- renderLeaflet({
 #       req(input$month)
 #       r <- current_raster_stack()[[input$month]]
 #       pal <- current_palette()
-#       
-#       make_base_map() %>%
-#         leaflet::setView(lat = 51.5, lng = 2.5, zoom = 8) %>%
-#         leaflet::addRasterImage(r, colors = pal, opacity = 0.8, layerId = "raster") %>%
+#
+#       make_base_map() |>
+#         leaflet::setView(lat = 51.5, lng = 2.5, zoom = 8) |>
+#         leaflet::addRasterImage(r, colors = pal, opacity = 0.8, layerId = "raster") |>
 #         leaflet::addLegend(pal = pal, values = raster::values(r), title = "Raster value")
 #     })
-#     
+#
 #     observeEvent(input$prev_month, {
 #       updateSliderInput(session, "month", value = max(1, input$month - 1))
 #     })
-#     
+#
 #     observeEvent(input$next_month, {
 #       updateSliderInput(session, "month", value = min(12, input$month + 1))
 #     })
-#     
+#
 #     observe({
 #       req(input$month)
 #       r <- current_raster_stack()[[input$month]]
 #       pal <- current_palette()
-#       
-#       leafletProxy("seabass_migration_map", session = session) %>%
-#         clearImages() %>%
-#         clearControls() %>%
-#         addRasterImage(r, colors = pal, opacity = 0.8, layerId = "raster") %>%
+#
+#       leafletProxy("seabass_migration_map", session = session) |>
+#         clearImages() |>
+#         clearControls() |>
+#         addRasterImage(r, colors = pal, opacity = 0.8, layerId = "raster") |>
 #         addLegend(pal = pal, values = raster::values(r), title = "Raster value")
 #     })
-#     
+#
 #     # other tabs...
 #     output$data_map <- renderLeaflet({ make_base_map() })
-#     
+#
 #     output$env_map <- renderLeaflet({
 #       make_env_wms_map(base_map = make_base_map(), wms_layers = wms_layers)
 #     })
-#     
+#
 #     output$acoustic_telemetry <- renderDT({
 #       datasets::cars
 #     })
 #   })
 # }
-# 
+#

@@ -1,3 +1,8 @@
+box::use(
+  shiny[NS, moduleServer],
+  leaflet[leafletOutput, renderLeaflet]
+)
+
 mod_seabass_env_ui <- function(id) {
   ns <- NS(id)
   leafletOutput(ns("env_map"), height = 600)

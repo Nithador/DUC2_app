@@ -2,7 +2,7 @@
 
 An interactive RShiny application for visualizing acoustic telemetry data, passive acoustic detection and classification data, and environmental layers for the DTO-Bioflow Digital Use Case 2 (DUC2): Impact of Offshore Energy Installations on Marine Life.
 
-![DTO-Bioflow logo](www/Logo_BIO-Flow2023_Final_Positive.png)
+![DTO-Bioflow logo](app/static/Logo_BIO-Flow2023_Final_Positive.png)
 
 ## 🎯 About
 
@@ -64,32 +64,39 @@ cd DUC2_viewer
 
 ```         
 DUC2_viewer/
-├── global.R                      # Loads libraries, data, and sources all scripts
-├── app.R                         # Main application file (UI + Server)
+├── app.R                         # Rhino entrypoint (calls rhino::app())
 ├── Dockerfile                    # Docker container configuration
 ├── renv.lock                     # R package dependency lock file
-├── requirements.txt              # Python requirements (if applicable)
+├── rhino.yml                     # Rhino project config
 ├── LICENSE                       # License file
 ├── README.md                     # This file
 │
-├── R/                            # All R scripts (modules, helpers, config)
-│   ├── 00_config.R               # Configuration (colors, URLs)
+├── app/
+│   ├── main.R                    # Main Rhino module (ui/server)
+│   ├── logic/
+│   │   └── legacy/               # Migrated app scripts (modules/helpers/config)
+│   │       ├── 00_config.R       # Configuration (colors, URLs)
+│   │       ├── DiurnalPlot.R
+│   │       ├── DPHpDPDplot.R
+│   │       ├── module_home.R
+│   │       ├── module_porpoise.R
+│   │       ├── seabass_module.R
+│   │       ├── seabass_submodule_migration.R
+│   │       ├── seabass_submodule_telemetry_data.R
+│   │       ├── seabass_submodule_environmental_data.R
+│   │       ├── maps.R
+│   │       ├── EDITO_STAC_data.R
+│   │       ├── helper_load_acoustic_telemetry_GAM_s3.R
+│   │       └── helper_wrangle_acoustic_telemetry_data.R
+│   └── static/                   # Static web assets
+│       ├── app.css
+│       ├── AU logo.png
+│       ├── Logo_BIO-Flow2023_Final_Positive.png
+│       ├── Logo_BIO-Flow2023_Final_Negative.png
+│       ├── D_labrax_phylopic_CC0.png
+│       ├── P_phocoena_phylopic_CC0.png
+│       └── north_arrow.png
 │   │
-│   ├── DiurnalPlot.R             # Diurnal plor for PAM data
-│   ├── DPHpDPDplot.R             # Detection Positive Hours (DPH) per Detection Positive Days (DPD) plot for PAM data
-│   ├── module_home.R             # Home page module
-│   ├── module_porpoise.R         # Harbour porpoise module
-│   │
-│   ├── seabass_module.R          # Parent seabass module
-│   ├── seabass_submodule_migration.R         # Migration predictions submodule
-│   ├── seabass_submodule_telemetry_data.R    # Acoustic telemetry submodule
-│   ├── seabass_submodule_environmental_data.R # Environmental layers submodule
-│   │
-│   ├── maps.R                    # Map rendering functions (base, environmental)
-│   ├── EDITO_STAC_data.R         # Load STAC catalog metadata
-│   ├── helper_load_acoustic_telemetry_GAM_s3.R  # Load GAM predictions from S3
-│   └── helper_wrangle_acoustic_telemetry_data.R # Data wrangling functions
-│
 ├── data/                         # Data files
 
 │   ├── DTO_DUC2_PpData.Rdata     # Harbour Porpoise PAM data
@@ -101,30 +108,23 @@ DUC2_viewer/
 │   ├── TEL_deployments.rds       # Telemetry acoustic receiver deployments
 │   └── TEL_detections.rds        # Raw telemetry detection data
 │
-└── www/                          # Static web assets
-    ├── app.css                   # Custom CSS styles
-    ├── AU Logo.png               # Aarhus University Logo
-    ├── Logo_BIO-Flow2023_Final_Positive.png    # DTO-Bioflow logo (light)
-    ├── Logo_BIO-Flow2023_Final_Negative.png    # DTO-Bioflow logo (dark)
-    ├── D_labrax_phylopic_CC0.png               # Seabass icon
-    ├── P_phocoena_phylopic_CC0.png             # Porpoise icon
-    └── north_arrow.png                         # Map north arrow
+└── tests/                        # Automated tests
 ```
 
 ### Key Files
 
 | File | Purpose |
 |-----------------------------|-------------------------------------------|
-| `global.R` | Runs once on app startup; loads libraries, data, and sources all R scripts |
-| `app.R` | Defines UI and server logic; calls module UI/server functions |
-| `R/00_config.R` | Stores configuration variables (colors, URLs, etc.) |
-| `R/module_*.R` | Main Shiny modules (home, porpoise) |
-| `R/seabass_*.R` | Seabass module and submodules |
-| `R/maps.R` | Map rendering functions (base map, environmental WMS) |
-| `R/helper_*.R` | Helper functions for data loading and processing |
-| `R/EDITO_STAC_data.R` | Functions to load STAC catalog metadata |
-| `R/DiurnalPlot.R` | Plotting function for PAM data
-| `R/DPHpDPDplot.R` | Plotting function for PAM data
+| `app.R` | Rhino app entrypoint |
+| `app/main.R` | Main module with startup loader + top-level UI/server |
+| `app/logic/legacy/00_config.R` | Stores configuration variables (colors, URLs, etc.) |
+| `app/logic/legacy/module_*.R` | Main Shiny modules (home, porpoise) |
+| `app/logic/legacy/seabass_*.R` | Seabass module and submodules |
+| `app/logic/legacy/maps.R` | Map rendering functions (base map, environmental WMS) |
+| `app/logic/legacy/helper_*.R` | Helper functions for data loading and processing |
+| `app/logic/legacy/EDITO_STAC_data.R` | Functions to load STAC catalog metadata |
+| `app/logic/legacy/DiurnalPlot.R` | Plotting function for PAM data |
+| `app/logic/legacy/DPHpDPDplot.R` | Plotting function for PAM data |
 | `Dockerfile` | Container configuration for deployment |
 | `renv.lock` | Package dependency snapshot for reproducibility |
 
@@ -162,10 +162,10 @@ This application uses a **modular architecture**. Each tab/feature is a self-con
 
 ### Step 1: Create Module File
 
-Create a new file in `R/` (e.g., `R/module_mynewspecies.R`):
+Create a new file in `app/logic/legacy/` (e.g., `app/logic/legacy/module_mynewspecies.R`):
 
 ``` r
-# R/module_mynewspecies.R
+# app/logic/legacy/module_mynewspecies.R
 
 # UI Function
 mod_mynewspecies_ui <- function(id) {
@@ -184,7 +184,7 @@ mod_mynewspecies_server <- function(id,
   moduleServer(id, function(input, output, session) {
     
     output$map <- renderLeaflet({
-      base_map_fun() %>%
+      base_map_fun() |>
         addMarkers(data = data, ~lon, ~lat)
     })
     
@@ -231,21 +231,21 @@ server <- function(input, output, session) {
 2.  **Use Parameter Names**: Inside modules, use parameter names (e.g., `base_map_fun`), not global function names (e.g., `make_base_map`)
 3.  **Namespace**: Use `ns <- NS(id)` in UI and wrap input/output IDs with `ns()`
 4.  **Self-Contained**: Each module should be independent and reusable
-5.  **File Organization**: All R scripts go in `R/` folder; use descriptive naming (e.g., `module_*.R`, `helper_*.R`)
+5.  **File Organization**: Keep app scripts in `app/logic/legacy/`; use descriptive naming (e.g., `module_*.R`, `helper_*.R`)
 
 ### Example Module Call Chain
 
 ``` r
-# In global.R (define once)
+# In app/main.R startup loader (define once)
 make_base_map <- function() { ... }
 
-# In app.R (pass to module)
+# In app/main.R (pass to module)
 mod_seabass_server(
   "seabass",
   base_map_fun = make_base_map  # ← Global function name
 )
 
-# In R/seabass_module.R (receive as parameter)
+# In app/logic/legacy/seabass_module.R (receive as parameter)
 mod_seabass_server <- function(id, base_map_fun) {
   moduleServer(id, function(input, output, session) {
     
@@ -257,7 +257,7 @@ mod_seabass_server <- function(id, base_map_fun) {
   })
 }
 
-# In R/seabass_submodule_migration.R (use parameter)
+# In app/logic/legacy/seabass_submodule_migration.R (use parameter)
 mod_seabass_migration_server <- function(id, base_map_fun) {
   moduleServer(id, function(input, output, session) {
     
@@ -287,7 +287,7 @@ mod_seabass_migration_server <- function(id, base_map_fun) {
 ### Code Style
 
 -   Use `snake_case` for function and variable names
--   Place all R scripts in the `R/` folder
+-   Place app scripts in `app/logic/legacy/`
 -   Prefix helper functions with `helper_` (e.g., `helper_load_data.R`)
 -   Prefix modules with `module_` (e.g., `module_home.R`)
 -   Comment complex logic
