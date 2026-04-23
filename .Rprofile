@@ -16,3 +16,5 @@ if (nzchar(system.file(package = "box.lsp"))) {
     )
   )
 }
+
+r <- function() shiny::runApp()
